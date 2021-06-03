@@ -98,11 +98,25 @@ We have to edit that demo.yaml file to include a NodePort for http and https tra
 
 **Now let's install Istio**
 
+Before doing the installation, I would recommend you to delete the current cluster using
+
+    kubectl delete cluster --name tambootcamp
+
+For the istio deployment, let's use a 3 node KinD Cluster. You can deploy the same using the kind-config.yaml file. 
+
+    kind create cluster --name tambootcamp --config kind-config.yaml
+
+This will deploy a 3 node cluster. Give it some time and check the status of Nodes using 
+
+    kubectl get nodes
+
+Once the status is Ready for all the three, we can start the installtion. 
+
 If not in your istio installation location, navigate there. 
 
     cd istio-1.10.0
 
-Now setup the path so istioctl would work. 
+Now setup the path so istioctl would work.  
 
     export PATH=$PWD/bin:$PATH
 
@@ -133,6 +147,7 @@ To make sure things are fine on the istio side, you can run the command for vali
 >*Octant* - https://github.com/vmware-tanzu/octant
 
 With that let's start octant and look at the services and pods coming up.
+I would recommend using a new Terminal Tab or a Window for this. 
 
 On Windows, you can use 
 
@@ -152,7 +167,17 @@ With a great Clarity UI, it shows almost everything on the Cluster.  I love Octa
 
 Under Discovery and Load Balancing, you will see services, you will find the istio-ingressgateway service. Click through that and you will see a *"Start Port-Forward"* button. Click on it! It will give you a link, click on it again and you will be able to see the BookInfo App. 
 
+We just did a Port-Forward here. Istio is not at play here so far. 
+
 Keep an eye on the Reviews side and refresh the page, you will see the Star ratings change. Do it again, it changes again. This is because the ratings is coming from three different versions.
+
+Now close that browser tab and head back to Octant and click on *Stop Port-Forward*
+
+Remember how we modified the demo.yaml file earlier to include NodePorts, we will now see the application by using that NodePort at 
+
+    http://localhost:31080/productpage
+
+Refresh the page couple of times to see how the reviews are changing. You can notice that traffic is getting routed to various versions of the pods. In real production like scenarios, think of this as various versions of your code-revisions to which you can divert traffic. 
 
 Now let's say you want only the v1 version of traffic to be hitting the application. You can modify the virtual Service using 
 
@@ -189,12 +214,15 @@ You will see that some of these throw some errors, that's a dependency issue. Yo
 
     kubectl apply -f samples/addons
 
-Ok, that should be better. Now for kiali, you can type in 
+Ok, that should be better. Have a look at the status of the kiali deployment rollout status using 
+
+    kubectl rollout status deployment/kiali -n istio-system
+
+Once it says successfully rolled out, you can start kiali by using the command
 
     istioctl dashboard kiali
 
 This should open up a webpage on your default browser, have a look around, look at the graphs, how everything is connected. 
-It also shows you the Istio Config. 
 
 Since you've tried kiali. There are other cool addons to be tried and are super popular in the opensource world. Try out prometheus, grafana, zipkin etc. 
 
